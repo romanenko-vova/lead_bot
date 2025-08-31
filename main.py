@@ -45,6 +45,7 @@ async def get_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 if __name__ == "__main__":
     application = ApplicationBuilder().token(os.getenv("TOKEN")).build()
+    # 1
     # Handler - обработчик, который будет обрабатывать
     # CommandHandler - обработчик, который будет обрабатывать команды
     # MessageHandler - обработчик, который будет обрабатывать сообщения
