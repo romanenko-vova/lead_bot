@@ -1,16 +1,8 @@
 import logging
 import os
 from dotenv import load_dotenv
-from telegram import (
-    Update,
-    ReplyKeyboardMarkup,
-    KeyboardButton,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-)
 from telegram.ext import (
     ApplicationBuilder,
-    ContextTypes,
     CommandHandler,
     ConversationHandler,
     MessageHandler,
@@ -25,6 +17,8 @@ from handlers.progrev_handler import (
     get_phone,
     get_inline_button,
 )
+from db.database import create_tables
+from config.states import FIRST_MESSAGE, GET_NAME, GET_PHONE, INLINE_BUTTON
 
 load_dotenv()
 logging.basicConfig(
@@ -32,11 +26,14 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-from config.states import FIRST_MESSAGE, GET_NAME, GET_PHONE, INLINE_BUTTON
-
 
 if __name__ == "__main__":
-    application = ApplicationBuilder().token(os.getenv("TOKEN")).build()
+    application = (
+        ApplicationBuilder()
+        .token(os.getenv("TOKEN"))
+        .post_init(create_tables)
+        .build()
+    )
     # 1
     # Handler - обработчик, который будет обрабатывать
     # CommandHandler - обработчик, который будет обрабатывать команды

@@ -12,9 +12,7 @@ from telegram.ext import (
 from config.states import FIRST_MESSAGE, GET_NAME, GET_PHONE, INLINE_BUTTON
 from utils.escape_sym import escape_sym
 from handlers.jobs import send_job_message
-import asyncio
-from datetime import timedelta
-
+from db.users_crud import create_user, get_user, update_user
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # update - полная информация о том что произошло
@@ -22,12 +20,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # update.effective_chat - информация о чате
     # update.effective_message - информация о сообщении
     # context - контекст, в котором мы можем использовать бота
-
-    """отвечаем на кнопку InlineKeyboardButton"""
+    
     query = update.callback_query
+    """отвечаем на кнопку InlineKeyboardButton"""
     if query:
         await query.answer()
         await query.delete_message()
+    else:
+        if not await get_user(update.effective_user.id):
+            await create_user(update.effective_user.id)
 
     keyboard = [["Да", "Нет"], ["Ещё не знаю"]]
     markup = ReplyKeyboardMarkup(
@@ -44,17 +45,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="MarkdownV2",
     )
     
-    context.job_queue.run_once(
+    job = context.job_queue.run_once(
         send_job_message,
         when=timedelta(seconds=30),
         data={"message": "Привет"},
         name="send_job_message",
         chat_id=update.effective_user.id,
     )
+    context.user_data['job'] = job
+    
     return FIRST_MESSAGE
 
 
 async def get_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Отменяем запланированное сообщение, если пользователь ответил
+    if 'job' in context.user_data:
+        context.user_data['job'].schedule_removal()
     answer = update.effective_message.text
     keyboard = [[update.effective_user.first_name]]
     markup = ReplyKeyboardMarkup(
@@ -95,6 +101,7 @@ async def get_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def get_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     name = update.effective_message.text
+    await update_user(update.effective_user.id, name)
     keyboard = [
         [KeyboardButton("Отправить номер телефона", request_contact=True)]
     ]
