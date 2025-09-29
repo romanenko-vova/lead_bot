@@ -8,6 +8,7 @@ from telegram.ext import (
     MessageHandler,
     filters,
     CallbackQueryHandler,
+    PicklePersistence,
 )
 
 from handlers.progrev_handler import (
@@ -19,18 +20,17 @@ from handlers.progrev_handler import (
 )
 from db.database import create_tables
 from config.states import FIRST_MESSAGE, GET_NAME, GET_PHONE, INLINE_BUTTON
+from logs.logger import logger
 
 load_dotenv()
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO,
-)
 
 
 if __name__ == "__main__":
+    persistence = PicklePersistence(filepath="lead_bot")
     application = (
         ApplicationBuilder()
         .token(os.getenv("TOKEN"))
+        .persistence(persistence)
         .post_init(create_tables)
         .build()
     )
@@ -67,8 +67,10 @@ if __name__ == "__main__":
             ],
         },
         fallbacks=[CommandHandler("start", start)],
+        persistent=True,
+        name="conv_handler",
     )
 
     application.add_handler(conv_handler)
-
+    logger.info("Бот запущен ✅")
     application.run_polling()

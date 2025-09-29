@@ -13,6 +13,8 @@ from config.states import FIRST_MESSAGE, GET_NAME, GET_PHONE, INLINE_BUTTON
 from utils.escape_sym import escape_sym
 from handlers.jobs import send_job_message
 from db.users_crud import create_user, get_user, update_user
+from logs.logger import logger
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # update - полная информация о том что произошло
@@ -29,6 +31,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         if not await get_user(update.effective_user.id):
             await create_user(update.effective_user.id)
+            logger.info(f"Пользователь {update.effective_user.id} создан 🚀")
 
     keyboard = [["Да", "Нет"], ["Ещё не знаю"]]
     markup = ReplyKeyboardMarkup(
@@ -49,18 +52,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         send_job_message,
         when=timedelta(seconds=30),
         data={"message": "Привет"},
-        name="send_job_message",
+        name=f"send_job_message_{update.effective_user.id}",
         chat_id=update.effective_user.id,
     )
-    context.user_data['job'] = job
+    context.user_data['job_name'] = job.name
     
     return FIRST_MESSAGE
 
 
 async def get_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Отменяем запланированное сообщение, если пользователь ответил
-    if 'job' in context.user_data:
-        context.user_data['job'].schedule_removal()
+    if 'job_name' in context.user_data:
+        for jobs in context.job_queue.get_jobs_by_name(context.user_data['job_name']):
+            jobs.schedule_removal()
     answer = update.effective_message.text
     keyboard = [[update.effective_user.first_name]]
     markup = ReplyKeyboardMarkup(
