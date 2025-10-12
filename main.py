@@ -35,6 +35,7 @@ if __name__ == "__main__":
         .post_init(create_tables)
         .build()
     )
+    print('Hello world')
     # 1
     # Handler - обработчик, который будет обрабатывать
     # CommandHandler - обработчик, который будет обрабатывать команды
