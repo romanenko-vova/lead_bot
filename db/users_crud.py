@@ -10,6 +10,11 @@ async def get_user(id_tg: int):
     async with aiosqlite.connect('lead.db') as conn:
         cursor = await conn.execute('SELECT * FROM users WHERE id_tg = ?', (id_tg,))
         return await cursor.fetchone()
+
+async def get_users():
+    async with aiosqlite.connect('lead.db') as conn:
+        cursor = await conn.execute('SELECT * FROM users')
+        return await cursor.fetchall()
     
 async def update_user(id_tg: int, **kwargs):
     async with aiosqlite.connect('lead.db') as conn:

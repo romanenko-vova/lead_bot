@@ -4,3 +4,4 @@ __pycache__/
 *.db
 
 lead_bot
+users.csv

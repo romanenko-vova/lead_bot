@@ -14,6 +14,9 @@ from utils.escape_sym import escape_sym
 from handlers.jobs import send_job_message
 from db.users_crud import create_user, get_user, update_user
 from logs.logger import logger
+from db.user_tags_crud import create_user_tag
+from config.config import ADMIN_ID
+from handlers.admins_handler import admins_start
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -22,6 +25,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # update.effective_chat - информация о чате
     # update.effective_message - информация о сообщении
     # context - контекст, в котором мы можем использовать бота
+    if update.effective_user.id == int(ADMIN_ID):
+        return await admins_start(update, context)
     
     query = update.callback_query
     """отвечаем на кнопку InlineKeyboardButton"""
@@ -32,6 +37,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not await get_user(update.effective_user.id):
             await create_user(update.effective_user.id)
             logger.info(f"Пользователь {update.effective_user.id} создан 🚀")
+            await create_user_tag(update.effective_user.id, "Горячий")
+            logger.info(f"Пользователь {update.effective_user.id} добавлен в таблицу users_tags 🚀")
 
     keyboard = [["Да", "Нет"], ["Ещё не знаю"]]
     markup = ReplyKeyboardMarkup(

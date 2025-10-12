@@ -1,4 +1,7 @@
 import aiosqlite
+from config.config import TAGS
+
+
 
 async def create_tables(app):
     conn = await aiosqlite.connect('lead.db')
@@ -25,8 +28,15 @@ async def create_tables(app):
     cur = await conn.execute("SELECT COUNT(*) FROM tags")
     num = await cur.fetchone()
     
-    if num[0] == 0:
-        await conn.execute('''INSERT OR IGNORE INTO tags (name) VALUES ('Горячий'), ('Обычный'), ('Холодный')''')
-    
+    if num[0] < len(TAGS):
+        stmt = 'INSERT OR IGNORE INTO tags (name) VALUES (?)'
+        for tag in TAGS:
+            await conn.execute(stmt, (tag,))
+            
+    # создание много людей
+    # stmt = 'INSERT INTO users (id_tg) VALUES (?)'
+    # for i in range(5150156527-1000, 5150156528):
+    #     await conn.execute(stmt, (i,))
+        
     await conn.commit()
     await conn.close()

@@ -1,6 +1,5 @@
 import logging
-import os
-from dotenv import load_dotenv
+
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -19,17 +18,19 @@ from handlers.progrev_handler import (
     get_inline_button,
 )
 from db.database import create_tables
-from config.states import FIRST_MESSAGE, GET_NAME, GET_PHONE, INLINE_BUTTON
+from config.states import FIRST_MESSAGE, GET_NAME, GET_PHONE, INLINE_BUTTON, ADMIN_START
 from logs.logger import logger
+from config.config import TOKEN
+from handlers.admins_handler import list_users, csv_users_list, spam_send_messages
 
-load_dotenv()
+
 
 
 if __name__ == "__main__":
     persistence = PicklePersistence(filepath="lead_bot")
     application = (
         ApplicationBuilder()
-        .token(os.getenv("TOKEN"))
+        .token(TOKEN)
         .persistence(persistence)
         .post_init(create_tables)
         .build()
@@ -65,6 +66,15 @@ if __name__ == "__main__":
                 ),
                 CallbackQueryHandler(callback=start, pattern="no"),
             ],
+            
+            
+            
+            # Admin handlers
+            ADMIN_START: [
+                CallbackQueryHandler(callback=list_users, pattern="users_list"),
+                CallbackQueryHandler(callback=csv_users_list, pattern="csv_users_list"),
+                CallbackQueryHandler(callback=spam_send_messages, pattern="send_message"),
+            ]
         },
         fallbacks=[CommandHandler("start", start)],
         persistent=True,
