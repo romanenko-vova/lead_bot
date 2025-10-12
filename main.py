@@ -80,6 +80,7 @@ if __name__ == "__main__":
         persistent=True,
         name="conv_handler",
     )
+    logger.info('Я тест')
 
     application.add_handler(conv_handler)
     logger.info("Бот запущен ✅")
