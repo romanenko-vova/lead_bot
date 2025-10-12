@@ -35,6 +35,7 @@ if __name__ == "__main__":
         .post_init(create_tables)
         .build()
     )
+    #nfjsnfjdsnfjds
     print('Hello world')
     # 1
     # Handler - обработчик, который будет обрабатывать
